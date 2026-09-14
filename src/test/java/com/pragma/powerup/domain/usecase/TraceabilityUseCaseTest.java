@@ -20,7 +20,7 @@ class TraceabilityUseCaseTest {
     @Test
     void assignsIdentityAndTimestampBeforeSaving() {
         Traceability traceability = new Traceability(
-                null, 30L, 20L, 5L, null, OrderStatus.PENDING, null);
+                null, 30L, 20L, 5L, null, null, OrderStatus.PENDING, null);
         when(persistencePort.save(traceability)).thenReturn(traceability);
 
         Traceability result = new TraceabilityUseCase(persistencePort).createTraceability(traceability);

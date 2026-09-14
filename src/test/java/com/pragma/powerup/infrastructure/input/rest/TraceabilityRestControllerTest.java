@@ -34,7 +34,7 @@ class TraceabilityRestControllerTest {
     @Test
     void registersTraceabilityWithInternalCredential() throws Exception {
         when(handler.createTraceability(any())).thenReturn(new TraceabilityResponseDto(
-                "event-1", 30L, 20L, 5L, null, OrderStatus.PENDING,
+                "event-1", 30L, 20L, 5L, 40L, OrderStatus.PENDING, OrderStatus.IN_PREPARATION,
                 Instant.parse("2026-09-13T12:00:00Z")));
 
         mvc.perform(post("/traceability")
@@ -42,7 +42,8 @@ class TraceabilityRestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validBody()))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.newStatus").value("PENDING"));
+                .andExpect(jsonPath("$.data.employeeId").value(40))
+                .andExpect(jsonPath("$.data.newStatus").value("IN_PREPARATION"));
     }
 
     @Test
@@ -61,7 +62,8 @@ class TraceabilityRestControllerTest {
 
     private String validBody() {
         return """
-                {"orderId":30,"customerId":20,"restaurantId":5,"newStatus":"PENDING"}
+                {"orderId":30,"customerId":20,"restaurantId":5,"employeeId":40,
+                "previousStatus":"PENDING","newStatus":"IN_PREPARATION"}
                 """;
     }
 }

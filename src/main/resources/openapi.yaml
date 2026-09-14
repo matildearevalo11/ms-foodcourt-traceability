@@ -41,6 +41,7 @@ components:
       required:
         - orderId
         - customerId
+        - restaurantId
         - newStatus
       properties:
         orderId:
@@ -52,6 +53,10 @@ components:
           format: int64
           minimum: 1
         restaurantId:
+          type: integer
+          format: int64
+          minimum: 1
+        employeeId:
           type: integer
           format: int64
           minimum: 1
@@ -68,7 +73,7 @@ components:
         - orderId
         - customerId
         - newStatus
-        - occurredAt
+        - changedAt
       properties:
         id:
           type: string
@@ -82,13 +87,16 @@ components:
         restaurantId:
           type: integer
           format: int64
+        employeeId:
+          type: integer
+          format: int64
         previousStatus:
           type: string
           enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
         newStatus:
           type: string
           enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
-        occurredAt:
+        changedAt:
           type: string
           format: date-time
     TraceabilityResponseEnvelope:

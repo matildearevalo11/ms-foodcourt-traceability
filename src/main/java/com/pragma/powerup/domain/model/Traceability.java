@@ -14,6 +14,7 @@ public class Traceability {
     private Long orderId;
     private Long customerId;
     private Long restaurantId;
+    private Long employeeId;
     private OrderStatus previousStatus;
     private OrderStatus newStatus;
     private Instant changedAt;
