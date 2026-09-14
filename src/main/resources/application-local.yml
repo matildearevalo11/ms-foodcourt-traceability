@@ -1,0 +1,7 @@
+logging:
+  level:
+    com.pragma.powerup: DEBUG
+
+aws:
+  credentials:
+    profile: ${AWS_PROFILE:foodcourt-local}

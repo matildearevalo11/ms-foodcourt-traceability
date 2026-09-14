@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Food Court Traceability API
+  version: 1.0.0
+  description: Registro interno de cambios de estado de los pedidos.
+paths:
+  /traceability:
+    post:
+      operationId: createTraceability
+      summary: Registrar un cambio de estado
+      security:
+        - internalApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceabilityRequest'
+      responses:
+        '201':
+          description: Registro de trazabilidad creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceabilityResponseEnvelope'
+        '400':
+          description: Datos inválidos
+        '403':
+          description: Credencial interna ausente o inválida
+        '503':
+          description: DynamoDB no está disponible
+components:
+  securitySchemes:
+    internalApiKey:
+      type: apiKey
+      in: header
+      name: X-Internal-Api-Key
+  schemas:
+    TraceabilityRequest:
+      type: object
+      required:
+        - orderId
+        - customerId
+        - newStatus
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          minimum: 1
+        customerId:
+          type: integer
+          format: int64
+          minimum: 1
+        restaurantId:
+          type: integer
+          format: int64
+          minimum: 1
+        previousStatus:
+          type: string
+          enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
+        newStatus:
+          type: string
+          enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
+    TraceabilityResponse:
+      type: object
+      required:
+        - id
+        - orderId
+        - customerId
+        - newStatus
+        - occurredAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        restaurantId:
+          type: integer
+          format: int64
+        previousStatus:
+          type: string
+          enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
+        newStatus:
+          type: string
+          enum: [PENDING, IN_PREPARATION, READY, DELIVERED, CANCELED]
+        occurredAt:
+          type: string
+          format: date-time
+    TraceabilityResponseEnvelope:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TraceabilityResponse'
