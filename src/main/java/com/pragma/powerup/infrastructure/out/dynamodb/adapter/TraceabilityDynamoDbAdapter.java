@@ -10,6 +10,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
@@ -17,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 public class TraceabilityDynamoDbAdapter implements ITraceabilityPersistencePort {
     private static final String ORDER_PREFIX = "ORDER#";
     private static final String EVENT_PREFIX = "EVENT#";
+    private static final String RESTAURANT_INDEX = "restaurant-changed-at-index";
 
     private final DynamoDbTable<TraceabilityEntity> table;
     private final ITraceabilityEntityMapper mapper;
@@ -41,6 +43,21 @@ public class TraceabilityDynamoDbAdapter implements ITraceabilityPersistencePort
                     Key.builder().partitionValue(ORDER_PREFIX + orderId).build());
             return table.query(orderKey).items().stream()
                     .filter(entity -> customerId.equals(entity.getCustomerId()))
+                    .map(mapper::toDomain)
+                    .toList();
+        } catch (DynamoDbException exception) {
+            throw new ExternalServiceException(ExceptionMessages.TRACEABILITY_PERSISTENCE_ERROR.getMessage());
+        }
+    }
+
+    @Override
+    public List<Traceability> findByRestaurantId(Long restaurantId) {
+        try {
+            DynamoDbIndex<TraceabilityEntity> restaurantIndex = table.index(RESTAURANT_INDEX);
+            QueryConditional restaurantKey = QueryConditional.keyEqualTo(
+                    Key.builder().partitionValue(restaurantId).build());
+            return restaurantIndex.query(restaurantKey).stream()
+                    .flatMap(page -> page.items().stream())
                     .map(mapper::toDomain)
                     .toList();
         } catch (DynamoDbException exception) {

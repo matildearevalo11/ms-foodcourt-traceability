@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pragma.powerup.application.dto.response.TraceabilityResponseDto;
+import com.pragma.powerup.application.dto.response.OrderEfficiencyResponseDto;
+import com.pragma.powerup.application.dto.response.EmployeeEfficiencyResponseDto;
 import com.pragma.powerup.application.handler.ITraceabilityHandler;
 import com.pragma.powerup.domain.enums.OrderStatus;
 import com.pragma.powerup.infrastructure.configuration.WebConfiguration;
@@ -86,6 +88,33 @@ class TraceabilityRestControllerTest {
         mvc.perform(get("/traceability/orders/30")
                         .with(jwt().jwt(token -> token.subject("40").claim("role", "EMPLOYEE"))
                                 .authorities(createAuthorityList("ROLE_EMPLOYEE"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void returnsOrderAndEmployeeEfficienciesToTheOwner() throws Exception {
+        when(handler.getOrderEfficiencies(5L)).thenReturn(List.of(
+                new OrderEfficiencyResponseDto(30L, 40L,
+                        Instant.parse("2026-09-15T10:00:00Z"),
+                        Instant.parse("2026-09-15T10:05:00Z"), 300L)));
+        when(handler.getEmployeeEfficiencyRanking(5L)).thenReturn(List.of(
+                new EmployeeEfficiencyResponseDto(1, 40L, 1L, 300D)));
+
+        var owner = jwt().jwt(token -> token.subject("10").claim("role", "OWNER"))
+                .authorities(createAuthorityList("ROLE_OWNER"));
+        mvc.perform(get("/traceability/restaurants/5/efficiency/orders").with(owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].durationSeconds").value(300));
+        mvc.perform(get("/traceability/restaurants/5/efficiency/employees").with(owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].rank").value(1))
+                .andExpect(jsonPath("$.data[0].averageDurationSeconds").value(300D));
+    }
+
+    @Test
+    void rejectsEfficiencyQueriesFromNonOwners() throws Exception {
+        mvc.perform(get("/traceability/restaurants/5/efficiency/orders")
+                        .with(jwt().authorities(createAuthorityList("ROLE_EMPLOYEE"))))
                 .andExpect(status().isForbidden());
     }
 

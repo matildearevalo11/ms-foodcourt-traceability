@@ -10,7 +10,8 @@ public enum ExceptionMessages {
     TRACEABILITY_PERSISTENCE_ERROR("Traceability could not be accessed"),
     AUTHENTICATED_USER_NOT_FOUND("Authenticated user not found"),
     INVALID_AUTHENTICATED_USER_ID("Authenticated user ID is invalid"),
-    ACCESS_DENIED("Access denied");
+    ACCESS_DENIED("Access denied"),
+    FOODCOURT_SERVICE_UNAVAILABLE("Food court service is unavailable");
 
     private final String message;
 }

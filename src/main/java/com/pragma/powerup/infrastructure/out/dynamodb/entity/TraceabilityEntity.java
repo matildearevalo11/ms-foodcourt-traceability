@@ -7,6 +7,8 @@ import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 
 @DynamoDbBean
 @Getter
@@ -32,5 +34,15 @@ public class TraceabilityEntity {
     @DynamoDbSortKey
     public String getSk() {
         return sk;
+    }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "restaurant-changed-at-index")
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    @DynamoDbSecondarySortKey(indexNames = "restaurant-changed-at-index")
+    public Instant getChangedAt() {
+        return changedAt;
     }
 }

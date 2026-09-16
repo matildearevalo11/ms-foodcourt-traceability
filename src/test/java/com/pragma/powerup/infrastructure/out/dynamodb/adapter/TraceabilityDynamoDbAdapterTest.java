@@ -19,12 +19,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"unchecked", "deprecation"})
 class TraceabilityDynamoDbAdapterTest {
     @Mock
     DynamoDbTable<TraceabilityEntity> table;
@@ -73,6 +76,23 @@ class TraceabilityDynamoDbAdapterTest {
                 .findByOrderIdAndCustomerId(30L, 20L);
 
         assertThat(result).extracting(Traceability::getId).containsExactly("event-1", "event-3");
+    }
+
+    @Test
+    void returnsRestaurantEventsUsingTheSecondaryIndex() {
+        DynamoDbIndex<TraceabilityEntity> index = org.mockito.Mockito.mock(DynamoDbIndex.class);
+        Page<TraceabilityEntity> page = Page.create(List.of(entity("event-1", 20L), entity("event-2", 21L)));
+        when(table.index("restaurant-changed-at-index")).thenReturn(index);
+        when(index.query(any(QueryConditional.class)))
+                .thenReturn(() -> List.of(page).iterator());
+        when(mapper.toDomain(any(TraceabilityEntity.class)))
+                .thenAnswer(invocation -> traceability(invocation.<TraceabilityEntity>getArgument(0).getId()));
+
+        List<Traceability> result = new TraceabilityDynamoDbAdapter(table, mapper)
+                .findByRestaurantId(5L);
+
+        assertThat(result).extracting(Traceability::getId).containsExactly("event-1", "event-2");
+        verify(table).index("restaurant-changed-at-index");
     }
 
     private Traceability traceability() {

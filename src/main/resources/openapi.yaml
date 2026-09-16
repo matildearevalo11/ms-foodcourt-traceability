@@ -62,7 +62,74 @@ paths:
           description: El usuario autenticado no es cliente
         '503':
           description: DynamoDB no está disponible
+  /traceability/restaurants/{restaurantId}/efficiency/orders:
+    get:
+      operationId: getOrderEfficiencies
+      summary: Consultar la duración de los pedidos entregados
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Duración de cada pedido completado del restaurante
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderEfficiency'
+        '400':
+          description: Identificador de restaurante inválido
+        '401':
+          description: Token ausente o inválido
+        '403':
+          description: El usuario no es propietario del restaurante
+        '503':
+          description: DynamoDB o foodcourt no están disponibles
+  /traceability/restaurants/{restaurantId}/efficiency/employees:
+    get:
+      operationId: getEmployeeEfficiencyRanking
+      summary: Consultar el ranking de eficiencia de los empleados
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantId'
+      responses:
+        '200':
+          description: Ranking ascendente por tiempo medio de entrega
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployeeEfficiency'
+        '400':
+          description: Identificador de restaurante inválido
+        '401':
+          description: Token ausente o inválido
+        '403':
+          description: El usuario no es propietario del restaurante
+        '503':
+          description: DynamoDB o foodcourt no están disponibles
 components:
+  parameters:
+    RestaurantId:
+      name: restaurantId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
   securitySchemes:
     internalApiKey:
       type: apiKey
@@ -143,3 +210,41 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/TraceabilityResponse'
+    OrderEfficiency:
+      type: object
+      required: [orderId, employeeId, startedAt, completedAt, durationSeconds]
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        employeeId:
+          type: integer
+          format: int64
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int64
+          minimum: 0
+    EmployeeEfficiency:
+      type: object
+      required: [rank, employeeId, completedOrders, averageDurationSeconds]
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+        employeeId:
+          type: integer
+          format: int64
+        completedOrders:
+          type: integer
+          format: int64
+          minimum: 1
+        averageDurationSeconds:
+          type: number
+          format: double
+          minimum: 0

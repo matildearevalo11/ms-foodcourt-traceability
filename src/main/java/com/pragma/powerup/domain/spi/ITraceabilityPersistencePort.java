@@ -7,4 +7,6 @@ public interface ITraceabilityPersistencePort {
     Traceability save(Traceability traceability);
 
     List<Traceability> findByOrderIdAndCustomerId(Long orderId, Long customerId);
+
+    List<Traceability> findByRestaurantId(Long restaurantId);
 }

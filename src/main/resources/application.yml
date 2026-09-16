@@ -33,6 +33,10 @@ aws:
   dynamodb:
     table-name: ${DYNAMODB_TABLE_NAME:foodcourt-traceability}
 
+clients:
+  foodcourt:
+    base-url: ${FOODCOURT_SERVICE_URL:http://localhost:8082/api/v1}
+
 internal:
   api-key: ${TRACEABILITY_API_KEY:1234567890abcde}
 
