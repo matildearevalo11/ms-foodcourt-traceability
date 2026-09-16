@@ -2,6 +2,7 @@ package com.pragma.powerup.infrastructure.configuration;
 
 import com.pragma.powerup.domain.api.ITraceabilityServicePort;
 import com.pragma.powerup.domain.spi.ITraceabilityPersistencePort;
+import com.pragma.powerup.domain.spi.ILoggedUserPort;
 import com.pragma.powerup.domain.usecase.TraceabilityUseCase;
 import com.pragma.powerup.infrastructure.out.dynamodb.adapter.TraceabilityDynamoDbAdapter;
 import com.pragma.powerup.infrastructure.out.dynamodb.entity.TraceabilityEntity;
@@ -45,8 +46,9 @@ public class BeanConfiguration {
     }
 
     @Bean
-    ITraceabilityServicePort traceabilityServicePort(ITraceabilityPersistencePort persistencePort) {
-        return new TraceabilityUseCase(persistencePort);
+    ITraceabilityServicePort traceabilityServicePort(ITraceabilityPersistencePort persistencePort,
+            ILoggedUserPort loggedUserPort) {
+        return new TraceabilityUseCase(persistencePort, loggedUserPort);
     }
 
     private AwsCredentialsProvider credentialsProvider(String profile) {

@@ -6,6 +6,7 @@ import com.pragma.powerup.application.handler.ITraceabilityHandler;
 import com.pragma.powerup.application.mapper.ITraceabilityRequestMapper;
 import com.pragma.powerup.application.mapper.ITraceabilityResponseMapper;
 import com.pragma.powerup.domain.api.ITraceabilityServicePort;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,5 +20,10 @@ public class TraceabilityHandler implements ITraceabilityHandler {
     @Override
     public TraceabilityResponseDto createTraceability(TraceabilityRequestDto request) {
         return responseMapper.toResponse(servicePort.createTraceability(requestMapper.toTraceability(request)));
+    }
+
+    @Override
+    public List<TraceabilityResponseDto> getOrderTraceability(Long orderId) {
+        return responseMapper.toResponseList(servicePort.getOrderTraceability(orderId));
     }
 }

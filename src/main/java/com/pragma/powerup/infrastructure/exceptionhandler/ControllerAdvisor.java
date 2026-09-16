@@ -1,6 +1,7 @@
 package com.pragma.powerup.infrastructure.exceptionhandler;
 
 import com.pragma.powerup.domain.exception.AuthorizationException;
+import com.pragma.powerup.domain.exception.AuthenticationException;
 import com.pragma.powerup.domain.exception.ExternalServiceException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Collections;
@@ -30,6 +31,11 @@ public class ControllerAdvisor {
     @ExceptionHandler(AuthorizationException.class)
     ResponseEntity<Map<String, Object>> forbidden(AuthorizationException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorBody(exception.getMessage()));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Map<String, Object>> unauthorized(AuthenticationException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody(exception.getMessage()));
     }
 
     @ExceptionHandler(ExternalServiceException.class)

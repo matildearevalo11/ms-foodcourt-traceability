@@ -3,6 +3,9 @@ package com.pragma.powerup.infrastructure.input.rest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,8 +13,11 @@ import com.pragma.powerup.application.dto.response.TraceabilityResponseDto;
 import com.pragma.powerup.application.handler.ITraceabilityHandler;
 import com.pragma.powerup.domain.enums.OrderStatus;
 import com.pragma.powerup.infrastructure.configuration.WebConfiguration;
+import com.pragma.powerup.infrastructure.configuration.SecurityConfiguration;
 import com.pragma.powerup.infrastructure.exceptionhandler.ControllerAdvisor;
+import com.pragma.powerup.infrastructure.security.RoleAuthorizationInterceptor;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -22,7 +28,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TraceabilityRestController.class)
-@Import({ControllerAdvisor.class, WebConfiguration.class})
+@Import({ControllerAdvisor.class, WebConfiguration.class, SecurityConfiguration.class,
+        RoleAuthorizationInterceptor.class})
 @TestPropertySource(properties = "internal.api-key=test-api-key")
 class TraceabilityRestControllerTest {
     @Autowired
@@ -58,6 +65,28 @@ class TraceabilityRestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void returnsTheAuthenticatedCustomersOrderHistory() throws Exception {
+        when(handler.getOrderTraceability(30L)).thenReturn(List.of(new TraceabilityResponseDto(
+                "event-1", 30L, 20L, 5L, null, null, OrderStatus.PENDING,
+                Instant.parse("2026-09-13T12:00:00Z"))));
+
+        mvc.perform(get("/traceability/orders/30")
+                        .with(jwt().jwt(token -> token.subject("20").claim("role", "CUSTOMER"))
+                                .authorities(createAuthorityList("ROLE_CUSTOMER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].orderId").value(30))
+                .andExpect(jsonPath("$.data[0].newStatus").value("PENDING"));
+    }
+
+    @Test
+    void rejectsNonCustomerRole() throws Exception {
+        mvc.perform(get("/traceability/orders/30")
+                        .with(jwt().jwt(token -> token.subject("40").claim("role", "EMPLOYEE"))
+                                .authorities(createAuthorityList("ROLE_EMPLOYEE"))))
+                .andExpect(status().isForbidden());
     }
 
     private String validBody() {

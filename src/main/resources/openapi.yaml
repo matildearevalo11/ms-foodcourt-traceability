@@ -29,12 +29,49 @@ paths:
           description: Credencial interna ausente o inválida
         '503':
           description: DynamoDB no está disponible
+  /traceability/orders/{orderId}:
+    get:
+      operationId: getOrderTraceability
+      summary: Consultar la trazabilidad de un pedido.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Historial cronológico del pedido
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TraceabilityResponse'
+        '401':
+          description: Token ausente o inválido
+        '403':
+          description: El usuario autenticado no es cliente
+        '503':
+          description: DynamoDB no está disponible
 components:
   securitySchemes:
     internalApiKey:
       type: apiKey
       in: header
       name: X-Internal-Api-Key
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     TraceabilityRequest:
       type: object

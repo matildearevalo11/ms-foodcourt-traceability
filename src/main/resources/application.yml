@@ -35,3 +35,6 @@ aws:
 
 internal:
   api-key: ${TRACEABILITY_API_KEY:1234567890abcde}
+
+jwt:
+  secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef}
